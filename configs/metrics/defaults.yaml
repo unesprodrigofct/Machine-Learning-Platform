@@ -1,0 +1,18 @@
+classification:
+  - accuracy
+  - precision_weighted
+  - recall_weighted
+  - f1_weighted
+  - roc_auc
+  - ks
+regression:
+  - mae
+  - rmse
+  - r2
+  - mape
+clustering:
+  - silhouette_score
+  - calinski_harabasz_score
+  - davies_bouldin_score
+anomaly_detection:
+  - anomaly_rate

@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+.env
+artifacts/*
+!artifacts/.gitkeep
+data/raw/
+data/processed/
+
+.DS_Store
+.vscode/
