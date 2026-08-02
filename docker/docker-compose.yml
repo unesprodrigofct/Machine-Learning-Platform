@@ -1,0 +1,12 @@
+services:
+  training:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: ["--help"]
+    volumes:
+      - ../configs:/app/configs:ro
+      - ../data:/app/data:ro
+      - ../artifacts:/app/artifacts
+    env_file:
+      - ../.env

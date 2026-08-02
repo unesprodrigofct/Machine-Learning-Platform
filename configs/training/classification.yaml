@@ -1,0 +1,46 @@
+name: delivery-late-classification
+problem_type: supervised
+task: classification
+random_seed: 42
+
+data_source:
+  type: csv
+  path: data/sample/delivery_classification.csv
+
+target_column: late
+
+validation:
+  strategy: out_of_sample
+  test_size: 0.30
+  stratify: true
+
+features:
+  identifier_columns: []
+
+preprocessing:
+  numeric_imputer: median
+  scale_numeric: true
+  categorical_imputer: most_frequent
+  one_hot_encode: true
+
+model:
+  algorithm: logistic_regression
+  parameters:
+    C: 1.0
+
+hyperparameter_search:
+  enabled: false
+
+evaluation:
+  metrics:
+    - accuracy
+    - precision_weighted
+    - recall_weighted
+    - f1_weighted
+    - roc_auc
+    - ks
+
+  metric_defaults_path: configs/metrics/defaults.yaml
+
+artifacts:
+  root_path: artifacts
