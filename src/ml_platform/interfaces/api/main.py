@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import Body, FastAPI, Request, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from ml_platform.adapters.artifact_stores.artifact_loader import ArtifactLoader
@@ -122,6 +123,7 @@ def create_app(artifact_path: str | Path | None = None) -> FastAPI:
             "Select the artifact explicitly with the MODEL_ARTIFACT_PATH environment variable. "
             "The service never trains or silently selects a latest model at request time."
         ),
+        servers=[{"url": "/", "description": "Current inference service"}],
         openapi_tags=[
             {"name": "Service", "description": "Health and artifact readiness endpoints."},
             {"name": "Inference", "description": "Single and batch predictions using the fitted artifact pipeline."},
@@ -131,6 +133,13 @@ def create_app(artifact_path: str | Path | None = None) -> FastAPI:
             "displayRequestDuration": True,
             "defaultModelsExpandDepth": 1,
         },
+    )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:8000", "http://127.0.0.1:8000"],
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["*"],
     )
     configured_path = artifact_path or os.getenv("MODEL_ARTIFACT_PATH")
     app.state.inference_service = None

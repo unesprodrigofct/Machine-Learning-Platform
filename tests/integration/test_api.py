@@ -38,6 +38,8 @@ async def _exercise_successful_api(app) -> None:
     transport = httpx2.ASGITransport(app=app)
     async with httpx2.AsyncClient(transport=transport, base_url="http://test") as client:
         assert (await client.get("/health")).json() == {"status": "ok"}
+        cors = await client.get("/health", headers={"Origin": "http://localhost:8000"})
+        assert cors.headers["access-control-allow-origin"] == "http://localhost:8000"
         readiness = await client.get("/ready")
         assert readiness.status_code == 200
         assert readiness.json()["model_type"] == "sklearn_tabular"
