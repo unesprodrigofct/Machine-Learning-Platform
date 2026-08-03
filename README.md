@@ -1,130 +1,263 @@
 # Machine Learning Platform
 
-A configurable and reproducible platform for training, evaluating, versioning, and serving supervised and unsupervised machine learning models.
+A configurable and reproducible platform for training, evaluating, versioning, and serving machine learning models.
 
-## Status
+The project is organized around three capabilities:
 
-The repository scaffold and the training capability specification are in place. The first implementation milestone is the configuration-driven training workflow.
+- **Training Capability:** configuration-driven model training and evaluation.
+- **Inference Capability:** REST API for predictions from a versioned artifact.
+- **Local Infrastructure:** Docker and Docker Compose runtime for training and serving.
 
-## Architecture principles
+The central architectural principle is training-serving consistency: the fitted preprocessing pipeline and estimator are saved together and reused by the inference API.
 
-- **Configuration first:** Every run is defined by a validated YAML configuration.
-- **Reproducible by default:** Seeds, effective configuration, data fingerprints, metrics, and environment metadata are persisted with every model artifact.
-- **Adapters at the boundary:** Data sources and artifact stores can change without affecting training orchestration.
-- **Plugins for ML variability:** Algorithms, feature transformers, evaluators, and validation strategies are registered behind explicit contracts.
-- **Training-serving consistency:** A fitted preprocessing pipeline and estimator are serialized together.
+See the [architecture overview](docs/architecture.md) and the
+[deployment diagram](docs/aws-architecture.drawio) for the capability
+boundaries, artifact flow, local Docker Compose topology, and proposed AWS
+deployment.
 
-## Repository guide
+## Repository structure
 
-| Path | Purpose |
-| --- | --- |
-| `src/ml_platform/` | Platform source code |
-| `configs/training/` | Versioned training configurations |
-| `sql/` | Read-only source extraction and enrichment queries |
-| `data/sample/` | Small non-sensitive example data |
-| `artifacts/` | Local generated model artifacts (not versioned) |
-| `tests/` | Unit and integration tests |
-| `docs/` | Architecture and operational documentation |
+```text
+.
+├── configs/
+│   ├── metrics/                 # Default metrics by task
+│   └── training/                # Versioned training configurations
+├── data/sample/                 # Deterministic, non-sensitive example data
+├── artifacts/                   # Generated artifacts; not versioned
+├── docker/
+│   ├── Dockerfile               # Runtime image
+│   └── docker-compose.yml       # Training and inference services
+├── docs/
+│   ├── architecture.md         # Cloud and application architecture
+│   └── aws-architecture.drawio  # Deployment diagram
+├── src/ml_platform/
+│   ├── application/            # Training and inference use cases
+│   ├── domain/                 # Configuration, errors, and domain models
+│   ├── adapters/               # Data sources, artifact stores, and loaders
+│   ├── plugins/                # Estimators, preprocessing, validation, metrics
+│   └── interfaces/             # CLI and REST API adapters
+├── tests/                      # Unit and integration tests
+├── pyproject.toml              # Dependencies and package entry points
+└── scripts/                    # Reproducible helper scripts
+```
 
-## Documentation
+## Training Capability
 
-- [Training capability specification](.vscode/training-platform-spec.md)
-- [Inference REST API specification](.vscode/inference-api-spec.md)
-- [Inference and infrastructure code walkthrough](.vscode/inference-infrastructure-code-walkthrough.md)
-- [Local infrastructure specification](.vscode/infrastructure-spec.md)
-- [Architecture overview](docs/architecture.md)
+The training capability is configuration-first. A YAML file defines:
 
-## Docker Compose execution
+- data source;
+- problem type and task;
+- validation strategy;
+- preprocessing;
+- algorithm and parameters;
+- evaluation metrics;
+- artifact location.
 
-Docker Compose is the primary execution path for the case. The same image
-supports both the one-shot training job and the long-running inference API.
+The orchestration code does not contain source-specific or algorithm-specific branching. Data sources are adapters and ML behavior is resolved through plugin registries.
 
-Build the image:
+### Run training with Docker Compose
+
+Prerequisites:
+
+- Docker;
+- Docker Compose;
+- Python 3.11+ only for generating the sample dataset.
+
+Build the runtime image:
 
 ```bash
 docker compose -f docker/docker-compose.yml build
 ```
 
-Generate the deterministic example dataset on the host, then train through
-Compose:
+Generate the deterministic example dataset:
 
 ```bash
 python3 scripts/generate_sample_data.py
+```
+
+Run the one-shot training service:
+
+```bash
 docker compose -f docker/docker-compose.yml run --rm training \
   --config /app/configs/training/classification.yaml
 ```
 
-The generated artifact remains in the host `artifacts/` directory. Set the
-artifact version explicitly before starting the API:
+The command creates a versioned artifact under:
 
-```bash
-export MODEL_ARTIFACT_PATH=/app/artifacts/<run_id>
-docker compose -f docker/docker-compose.yml up inference
+```text
+artifacts/<run_id>/
 ```
 
-The API is available at `http://localhost:8000/docs`.
-
-For local development without containers, the following workflow is also
-supported:
-
-## Local Python execution
-
-Create a virtual environment and install the project:
+### Run training locally with Python
 
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -e ".[api,dev]"
-```
-
-Generate the deterministic example dataset and train the example model:
-
-```bash
 python3 scripts/generate_sample_data.py
 .venv/bin/ml-platform --config configs/training/classification.yaml
 ```
 
-Each run writes a self-contained artifact directory under `artifacts/`.
+### Metrics behavior
 
-Evaluation metrics are selected from `evaluation.metrics` in the training
-configuration. When that field is omitted, the task-specific defaults from
-`configs/metrics/defaults.yaml` are used. For example, the included
-classification configuration uses all defaults defined for classification.
+Metrics can be explicitly configured:
 
-Run the automated tests with:
+```yaml
+evaluation:
+  metrics:
+    - accuracy
+    - precision_weighted
+    - recall_weighted
+    - f1_weighted
+    - roc_auc
+    - ks
+```
+
+If `evaluation.metrics` is omitted, the platform loads task defaults from:
+
+```text
+configs/metrics/defaults.yaml
+```
+
+The effective metric list is persisted in the artifact configuration.
+
+## Inference Capability
+
+The inference API consumes one immutable training artifact. It does not retrain the model or reimplement preprocessing.
+
+The artifact contains:
+
+```text
+artifacts/<run_id>/
+├── inference_pipeline.joblib  # fitted preprocessing + estimator
+├── schema.json                # feature contract
+├── config.yaml                # effective training configuration
+├── metadata.json              # version, model, environment, and lineage
+└── metrics.json               # validation report
+```
+
+### Run the API with Docker Compose
+
+Select the exact artifact version:
+
+```bash
+export MODEL_ARTIFACT_PATH=/app/artifacts/<run_id>
+```
+
+Start the inference service:
+
+```bash
+docker compose -f docker/docker-compose.yml up inference
+```
+
+The service exposes:
+
+- Swagger UI: http://localhost:8000/docs
+- OpenAPI schema: http://localhost:8000/openapi.json
+- Liveness: http://localhost:8000/health
+- Readiness: http://localhost:8000/ready
+
+### Make a prediction
+
+Single prediction:
+
+```bash
+curl -X POST http://localhost:8000/predict \
+  -H 'Content-Type: application/json' \
+  -d '{"distance_km":8.5,"prep_minutes":28,"weather":"rain","order_hour":19}'
+```
+
+Batch prediction:
+
+```bash
+curl -X POST http://localhost:8000/predict/batch \
+  -H 'Content-Type: application/json' \
+  -d '{"instances":[{"distance_km":8.5,"prep_minutes":28,"weather":"rain","order_hour":19},{"distance_km":2.0,"prep_minutes":12,"weather":"clear","order_hour":11}]}'
+```
+
+The API validates the request contract and passes raw feature values to the fitted pipeline. Imputation, encoding, scaling, and model inference are performed by `inference_pipeline.joblib`.
+
+## How to use the platform
+
+The recommended workflow is:
+
+1. Generate or provide the input data.
+2. Run the training capability with a versioned YAML configuration.
+3. Select the generated artifact directory by its `run_id`.
+4. Start the inference service with `MODEL_ARTIFACT_PATH`.
+5. Check readiness and send raw features through the REST API.
+
+For the complete command sequence, use the local end-to-end walkthrough
+available in the developer workspace. It is intentionally private and ignored
+by Git.
+
+The interactive API documentation is available after starting inference:
+
+- Swagger UI: http://localhost:8000/docs
+- OpenAPI JSON: http://localhost:8000/openapi.json
+
+Swagger documents the feature request example, success responses, and the
+structured error responses returned for invalid requests, prediction failures,
+and unavailable artifacts.
+
+## Local infrastructure
+
+Docker Compose defines two independent services:
+
+```text
+training
+  configs: read-only
+  data: read-only
+  artifacts: read-write
+  lifecycle: one-shot
+
+inference
+  artifacts: read-only
+  MODEL_ARTIFACT_PATH: explicit version
+  port: 8000
+  lifecycle: long-running
+```
+
+Starting the inference service does not trigger training. A new model version is created by a new training run and selected explicitly through `MODEL_ARTIFACT_PATH`.
+
+## Tests
+
+Run the complete test suite:
 
 ```bash
 .venv/bin/pytest
 ```
 
-## Serving the trained model
+The tests cover configuration, validation, plugin resolution, evaluation, artifact persistence, API health/readiness, predictions, batch requests, OpenAPI, invalid requests, and missing artifacts.
 
-The API is an optional capability. Point it to one immutable training artifact
-version and start Uvicorn:
-
-```bash
-MODEL_ARTIFACT_PATH=artifacts/<run_id> \
-.venv/bin/uvicorn ml_platform.interfaces.api.main:app --host 0.0.0.0 --port 8000
-```
-
-The artifact contains the fitted inference pipeline, feature contract, and
-metadata. The API does not retrain the model or duplicate preprocessing.
-
-Open Swagger at `http://localhost:8000/docs`.
-
-Check readiness:
+The Docker image can be built with:
 
 ```bash
-curl http://localhost:8000/ready
+docker build -f docker/Dockerfile -t ml-platform:local .
 ```
 
-Send one prediction using the raw feature values expected by the training
-schema:
+## Documentation
 
-```bash
-curl -X POST http://localhost:8000/predict \
-  -H 'Content-Type: application/json' \
-  -d '{"distance_km": 8.5, "weather": "rain"}'
+- [Application and cloud architecture](docs/architecture.md)
+- [AWS deployment diagram](docs/aws-architecture.drawio)
+
+## Cloud architecture
+
+The local Docker Compose setup maps to the proposed AWS design:
+
+```text
+S3 versioned artifacts
+        |
+SageMaker Training or ECS training task
+        |
+S3 + model registry
+        |
+ECS/Fargate service or SageMaker Endpoint
+        |
+API Gateway / Application Load Balancer
 ```
 
-The API returns the prediction and the immutable `run_id` of the loaded
-artifact.
+The application depends on artifact and inference contracts, not on Docker or a specific AWS service. This allows the local runtime to evolve into a managed cloud deployment.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).

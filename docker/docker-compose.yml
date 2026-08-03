@@ -1,12 +1,28 @@
 services:
   training:
-    build:
+    build: &platform-image
       context: ..
       dockerfile: docker/Dockerfile
-    command: ["--help"]
     volumes:
       - ../configs:/app/configs:ro
       - ../data:/app/data:ro
       - ../artifacts:/app/artifacts
-    env_file:
-      - ../.env
+    command: ["--config", "/app/configs/training/classification.yaml"]
+
+  inference:
+    build: *platform-image
+    entrypoint: ["uvicorn"]
+    command: ["ml_platform.interfaces.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      MODEL_ARTIFACT_PATH: ${MODEL_ARTIFACT_PATH:?Set MODEL_ARTIFACT_PATH to /app/artifacts/<run_id>}
+    volumes:
+      - ../artifacts:/app/artifacts:ro
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s

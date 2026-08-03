@@ -30,3 +30,14 @@ def test_cli_runs_a_training_job(tmp_path: Path) -> None:
 
     assert result.exit_code == 0
     assert "Training completed" in result.stdout
+
+
+def test_cli_reports_platform_errors(tmp_path: Path) -> None:
+    config_path = tmp_path / "invalid.yaml"
+    config_path.write_text("problem_type: supervised\n", encoding="utf-8")
+
+    result = CliRunner().invoke(app, ["--config", str(config_path)])
+
+    assert result.exit_code == 1
+    assert "Training failed" in result.stderr
+    assert "name" in result.stderr

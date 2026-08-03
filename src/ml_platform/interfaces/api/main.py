@@ -1,0 +1,211 @@
+"""FastAPI adapter for model inference."""
+
+from __future__ import annotations
+
+import os
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Annotated, Any
+
+from fastapi import Body, FastAPI, Request, status
+from fastapi.responses import JSONResponse
+
+from ml_platform.adapters.artifact_stores.artifact_loader import ArtifactLoader
+from ml_platform.application.inference import InferenceService
+from ml_platform.domain.errors import (
+    ArtifactError,
+    DataValidationError,
+    PlatformError,
+    TrainingError,
+)
+from ml_platform.interfaces.api.models import (
+    BatchPredictionRequest,
+    BatchPredictionResponse,
+    ErrorResponse,
+    PredictionResponse,
+)
+
+ERROR_RESPONSES = {
+    400: {
+        "model": ErrorResponse,
+        "description": "The request does not satisfy the selected artifact feature contract.",
+        "content": {
+            "application/json": {
+                "example": {
+                    "error": {
+                        "code": "invalid_request",
+                        "message": "Required feature is missing.",
+                        "details": {"index": 0, "fields": ["prep_minutes"]},
+                    }
+                }
+            }
+        },
+    },
+    422: {
+        "model": ErrorResponse,
+        "description": "The fitted model could not produce a prediction for the validated input.",
+        "content": {
+            "application/json": {
+                "example": {
+                    "error": {
+                        "code": "prediction_error",
+                        "message": "Prediction could not be completed.",
+                        "details": {},
+                    }
+                }
+            }
+        },
+    },
+    503: {
+        "model": ErrorResponse,
+        "description": "The selected model artifact is unavailable or could not be loaded.",
+        "content": {
+            "application/json": {
+                "example": {
+                    "error": {
+                        "code": "model_not_ready",
+                        "message": "The model artifact is not available.",
+                        "details": {},
+                    }
+                }
+            }
+        },
+    },
+}
+
+
+def create_app(artifact_path: str | Path | None = None) -> FastAPI:
+    app = FastAPI(
+        title="Machine Learning Platform Inference API",
+        version="0.1.0",
+        description=(
+            "Serve predictions from a versioned fitted inference pipeline.\n\n"
+            "The API preserves the training-serving contract: request payloads contain "
+            "raw feature values, while imputation, encoding, scaling, and model inference "
+            "are executed by the fitted pipeline stored in the selected artifact.\n\n"
+            "Select the artifact explicitly with the MODEL_ARTIFACT_PATH environment variable. "
+            "The service never trains or silently selects a latest model at request time."
+        ),
+        openapi_tags=[
+            {"name": "Service", "description": "Health and artifact readiness endpoints."},
+            {"name": "Inference", "description": "Single and batch predictions using the fitted artifact pipeline."},
+        ],
+    )
+    configured_path = artifact_path or os.getenv("MODEL_ARTIFACT_PATH")
+    app.state.inference_service = None
+    app.state.artifact_error = None
+    if configured_path:
+        try:
+            app.state.inference_service = InferenceService(ArtifactLoader(configured_path).load())
+        except ArtifactError as error:
+            app.state.artifact_error = error
+
+    @app.exception_handler(PlatformError)
+    async def platform_error_handler(_: Request, error: PlatformError) -> JSONResponse:
+        if isinstance(error, ArtifactError):
+            http_status = status.HTTP_503_SERVICE_UNAVAILABLE
+            code = "model_not_ready"
+        elif isinstance(error, DataValidationError):
+            http_status = status.HTTP_400_BAD_REQUEST
+            code = "invalid_request"
+        elif isinstance(error, TrainingError):
+            http_status = status.HTTP_422_UNPROCESSABLE_ENTITY
+            code = "prediction_error"
+        else:
+            http_status = status.HTTP_500_INTERNAL_SERVER_ERROR
+            code = "internal_error"
+        return JSONResponse(
+            status_code=http_status,
+            content={"error": {"code": code, "message": error.message, "details": error.details}},
+        )
+
+    @app.get(
+        "/health",
+        tags=["Service"],
+        summary="Check whether the process is alive",
+        description="Liveness probe. This endpoint does not verify that a model artifact is loaded.",
+    )
+    async def health() -> dict[str, str]:
+        return {"status": "ok"}
+
+    @app.get(
+        "/ready",
+        tags=["Service"],
+        summary="Check whether the selected artifact is ready",
+        description="Readiness probe that verifies the configured artifact can serve predictions.",
+    )
+    async def ready() -> dict[str, Any]:
+        service = _service(app)
+        metadata = service.context.metadata
+        return {
+            "status": "ready",
+            "run_id": service.context.run_id,
+            "artifact_version": metadata.get("artifact_version", service.context.run_id),
+            "model_type": metadata.get("model_type"),
+            "task": metadata.get("task"),
+            "algorithm": metadata.get("algorithm"),
+        }
+
+    @app.post(
+        "/predict",
+        response_model=PredictionResponse,
+        tags=["Inference"],
+        summary="Predict one instance",
+        description=(
+            "Validate one raw feature record against the selected artifact schema and execute "
+            "the fitted inference pipeline. Do not apply training preprocessing in the client."
+        ),
+        responses=ERROR_RESPONSES,
+    )
+    async def predict(
+        features: Annotated[
+            dict[str, Any],
+            Body(
+                openapi_examples={
+                    "classification_example": {
+                        "summary": "Classification features",
+                        "value": {
+                            "distance_km": 8.5,
+                            "prep_minutes": 28,
+                            "weather": "rain",
+                            "order_hour": 19,
+                        },
+                    }
+                }
+            ),
+        ]
+    ) -> dict[str, Any]:
+        service = _service(app)
+        result = service.predict_one(features)
+        return {**result, "run_id": service.context.run_id, "executed_at": datetime.now(UTC)}
+
+    @app.post(
+        "/predict/batch",
+        response_model=BatchPredictionResponse,
+        tags=["Inference"],
+        summary="Predict a batch of instances",
+        description=(
+            "Validate and predict multiple raw feature records. The response preserves input order "
+            "and includes the artifact run identifier and UTC execution timestamp."
+        ),
+        responses=ERROR_RESPONSES,
+    )
+    async def predict_batch(request: BatchPredictionRequest) -> dict[str, Any]:
+        service = _service(app)
+        return {
+            "predictions": service.predict_batch(request.instances),
+            "run_id": service.context.run_id,
+            "executed_at": datetime.now(UTC),
+        }
+
+    return app
+
+
+def _service(app: FastAPI) -> InferenceService:
+    if app.state.inference_service is None:
+        error = app.state.artifact_error or ArtifactError("MODEL_ARTIFACT_PATH is not configured.")
+        raise error
+    return app.state.inference_service
+
+
+app = create_app()

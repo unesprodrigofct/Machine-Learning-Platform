@@ -1,0 +1,177 @@
+<mxfile host="app.diagrams.net" agent="Codex">
+  <diagram id="aws-ml-platform" name="AWS ML Platform">
+    <mxGraphModel dx="1586" dy="893" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;fontSize=24;fontStyle=1;strokeColor=none;fillColor=none;" value="Machine Learning Platform — AWS Deployment Architecture" vertex="1">
+          <mxGeometry height="40" width="900" x="40" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="local" parent="1" style="swimlane;html=1;rounded=1;startSize=30;fillColor=#F4F5F7;strokeColor=#97A0AF;fontStyle=1;" value="Local Development" vertex="1">
+          <mxGeometry height="560" width="250" x="40" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="local_dev" parent="local" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5E6C84;" value="Developer&#xa;README + config" vertex="1">
+          <mxGeometry height="60" width="180" x="35" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="local_train" parent="local" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3FCEF;strokeColor=#36B37E;" value="Docker Compose&#xa;Training service" vertex="1">
+          <mxGeometry height="60" width="180" x="35" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="local_artifact" parent="local" style="shape=folder;whiteSpace=wrap;html=1;fillColor=#DEEBFF;strokeColor=#4C9AFF;tabWidth=175;tabHeight=0;" value="Host artifacts/&lt;run_id&gt;&#xa;inference_pipeline.joblib" vertex="1">
+          <mxGeometry height="75" width="180" x="35" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="local_api" parent="local" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE7F6;strokeColor=#6554C0;" value="Docker Compose&#xa;Inference service" vertex="1">
+          <mxGeometry height="60" width="180" x="35" y="435" as="geometry" />
+        </mxCell>
+        <mxCell id="l1" edge="1" parent="1" source="local_dev" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;html=1;strokeColor=#5E6C84;" target="local_train">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l2" edge="1" parent="1" source="local_train" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;html=1;strokeColor=#5E6C84;" target="local_artifact">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l3" edge="1" parent="1" source="local_artifact" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;html=1;strokeColor=#5E6C84;" target="local_api">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="aws" parent="1" style="swimlane;html=1;rounded=1;startSize=30;fillColor=#F7F8F9;strokeColor=#0052CC;fontStyle=1;" value="AWS Cloud" vertex="1">
+          <mxGeometry height="560" width="1160" x="340" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="data" parent="aws" style="swimlane;html=1;rounded=1;startSize=28;fillColor=#FFF7E6;strokeColor=#FFAB00;fontStyle=1;" value="Data and Artifacts" vertex="1">
+          <mxGeometry height="470" width="270" x="30" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_data" parent="data" style="shape=cylinder;whiteSpace=wrap;html=1;fillColor=#FFF0B3;strokeColor=#FFAB00;" value="Amazon S3&#xa;Datasets" vertex="1">
+          <mxGeometry height="70" width="180" x="45" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="rds" parent="data" style="shape=cylinder;whiteSpace=wrap;html=1;fillColor=#FFF0B3;strokeColor=#FFAB00;" value="Amazon RDS&#xa;Read-only source" vertex="1">
+          <mxGeometry height="70" width="180" x="45" y="155" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_models" parent="data" style="shape=cylinder;whiteSpace=wrap;html=1;fillColor=#DEEBFF;strokeColor=#4C9AFF;" value="Amazon S3&#xa;Versioned artifacts" vertex="1">
+          <mxGeometry height="75" width="180" x="45" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="registry" parent="data" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DEEBFF;strokeColor=#4C9AFF;" value="SageMaker Model Registry&#xa;Approved versions" vertex="1">
+          <mxGeometry height="60" width="180" x="45" y="385" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="data" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;html=1;strokeColor=#36B37E;" value="write version">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="335" y="240" as="sourcePoint" />
+            <mxPoint x="135" y="297.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="training" parent="aws" style="swimlane;html=1;rounded=1;startSize=28;fillColor=#E3FCEF;strokeColor=#36B37E;fontStyle=1;" value="Training and Promotion" vertex="1">
+          <mxGeometry height="470" width="300" x="320" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="orchestration" parent="training" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3FCEF;strokeColor=#36B37E;" value="EventBridge /&#xa;Step Functions" vertex="1">
+          <mxGeometry height="60" width="190" x="55" y="55" as="geometry" />
+        </mxCell>
+        <mxCell id="job" parent="training" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3FCEF;strokeColor=#36B37E;" value="SageMaker Training Job&#xa;or ECS Fargate task" vertex="1">
+          <mxGeometry height="75" width="210" x="45" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="gate" parent="training" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3FCEF;strokeColor=#36B37E;" value="Validation and&#xa;promotion gate" vertex="1">
+          <mxGeometry height="60" width="190" x="55" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="serving" parent="aws" style="swimlane;html=1;rounded=1;startSize=28;fillColor=#EDE7F6;strokeColor=#6554C0;fontStyle=1;" value="Inference Layer" vertex="1">
+          <mxGeometry height="470" width="470" x="660" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="gateway" parent="serving" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE7F6;strokeColor=#6554C0;" value="Amazon API Gateway&#xa;REST / OpenAPI" vertex="1">
+          <mxGeometry height="65" width="220" x="125" y="55" as="geometry" />
+        </mxCell>
+        <mxCell id="lambda" parent="serving" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE7F6;strokeColor=#6554C0;" value="AWS Lambda&#xa;Small tabular model inference" vertex="1">
+          <mxGeometry height="75" width="190" x="30" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="ecs" parent="serving" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE7F6;strokeColor=#6554C0;" value="ECS Fargate /&#xa;SageMaker Endpoint&#xa;Large or low-latency models" vertex="1">
+          <mxGeometry height="75" width="190" x="250" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="cache" parent="serving" style="shape=folder;whiteSpace=wrap;html=1;fillColor=#DEEBFF;strokeColor=#4C9AFF;tabWidth=215;tabHeight=60;" value="Warm local model cache&lt;br&gt;loaded from S3" vertex="1">
+          <mxGeometry height="60" width="220" x="125" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="serving" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;html=1;strokeColor=#4C9AFF;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="s3_models" value="">
+          <mxGeometry relative="1" x="0.0068" y="-55" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="125.06" y="312.47" />
+            </Array>
+            <mxPoint x="125" y="355" as="sourcePoint" />
+            <mxPoint x="-395" y="290" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zuHi2PW2IDjJE1Kv7WFg-3" connectable="0" parent="e10" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Read-only version" vertex="1">
+          <mxGeometry relative="1" x="0.0542" y="1" as="geometry">
+            <mxPoint x="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ops" parent="aws" style="swimlane;html=1;rounded=1;startSize=28;fillColor=#F4F5F7;strokeColor=#97A0AF;fontStyle=1;" value="Security, Delivery and Observability" vertex="1">
+          <mxGeometry height="1" width="1100" x="20" y="530" as="geometry" />
+        </mxCell>
+        <mxCell id="ecr" parent="aws" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F4F5F7;strokeColor=#97A0AF;" value="Amazon ECR&#xa;Container images" vertex="1">
+          <mxGeometry height="60" width="170" x="45" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="iam" parent="aws" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F4F5F7;strokeColor=#97A0AF;" value="IAM roles&#xa;Least privilege" vertex="1">
+          <mxGeometry height="60" width="170" x="290" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="secrets" parent="aws" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F4F5F7;strokeColor=#97A0AF;" value="Secrets Manager&#xa;Database credentials" vertex="1">
+          <mxGeometry height="60" width="190" x="530" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="cw" parent="aws" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F4F5F7;strokeColor=#97A0AF;" value="CloudWatch&#xa;Logs, metrics, alarms" vertex="1">
+          <mxGeometry height="60" width="190" x="790" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="aws" source="s3_data" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;html=1;strokeColor=#FFAB00;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="job" value="read">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="255.06" y="190.06" />
+              <mxPoint x="470" y="190.06" />
+            </Array>
+            <mxPoint x="190" y="190" as="sourcePoint" />
+            <mxPoint x="428.8599999999997" y="308.4499999999998" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="rds" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;html=1;strokeColor=#FFAB00;" target="job" value="read-only SQL">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="orchestration" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;html=1;strokeColor=#36B37E;" target="job" value="start">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="s3_models" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;html=1;strokeColor=#4C9AFF;" target="registry" value="register">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="gateway" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;html=1;strokeColor=#6554C0;" target="lambda" value="HTTPS">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="gateway" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;html=1;strokeColor=#6554C0;" target="ecs" value="alternative target">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="lambda" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;html=1;strokeColor=#4C9AFF;" target="cache" value="load artifact">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="ecs" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;html=1;strokeColor=#4C9AFF;" target="cache" value="load artifact">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="iam" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;dashed=1;html=1;strokeColor=#97A0AF;" target="job" value="access control">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="715.06" y="560.06" />
+              <mxPoint x="810" y="560.06" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="secrets" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;dashed=1;html=1;strokeColor=#97A0AF;" target="job" value="secrets">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="970" y="530" />
+              <mxPoint x="810" y="530" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="1" source="job" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;dashed=1;html=1;strokeColor=#97A0AF;" target="cw" value="logs / metrics">
+          <mxGeometry relative="1" x="0.2171" y="5" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1020" y="362.53" />
+              <mxPoint x="1020" y="670.06" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e14" edge="1" parent="1" source="lambda" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;dashed=1;html=1;strokeColor=#97A0AF;" target="cw" value="logs / metrics">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
