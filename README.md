@@ -16,9 +16,13 @@ The implemented runtime is the local Docker Compose architecture. The
 capability boundaries, artifact contract, and local topology are documented in
 the [architecture guide](docs/architecture.md).
 
-The image below combines the implemented local runtime with a proposed AWS
-deployment. The AWS resources are not provisioned by this repository. The
-editable [draw.io source](docs/aws-architecture.drawio) is also available.
+> **Implemented locally:** Docker Compose training and inference services.
+>
+> **Proposed only:** AWS services for a future cloud deployment. No AWS
+> resources are provisioned by this repository.
+
+The image below shows both contexts. The editable
+[draw.io source](docs/aws-architecture.drawio) is also available.
 
 ![Implemented local runtime and proposed AWS deployment](docs/aws-architecture-image.png)
 
