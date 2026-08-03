@@ -23,7 +23,9 @@ from ml_platform.interfaces.api.models import (
     BatchPredictionRequest,
     BatchPredictionResponse,
     ErrorResponse,
+    HealthResponse,
     PredictionResponse,
+    ReadinessResponse,
 )
 
 ERROR_RESPONSES = {
@@ -171,18 +173,44 @@ def create_app(artifact_path: str | Path | None = None) -> FastAPI:
 
     @app.get(
         "/health",
+        response_model=HealthResponse,
         tags=["Service"],
         summary="Check whether the process is alive",
         description="Liveness probe. This endpoint does not verify that a model artifact is loaded.",
+        responses={
+            200: {
+                "description": "The API process is alive.",
+                "content": {"application/json": {"example": {"status": "ok"}}},
+            }
+        },
     )
-    async def health() -> dict[str, str]:
+    async def health() -> HealthResponse:
         return {"status": "ok"}
 
     @app.get(
         "/ready",
+        response_model=ReadinessResponse,
         tags=["Service"],
         summary="Check whether the selected artifact is ready",
         description="Readiness probe that verifies the configured artifact can serve predictions.",
+        responses={
+            200: {
+                "description": "The selected artifact is loaded and ready.",
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "status": "ready",
+                            "run_id": "20260802T183512Z-834dd847",
+                            "artifact_version": "20260802T183512Z-834dd847",
+                            "model_type": "sklearn_tabular",
+                            "task": "classification",
+                            "algorithm": "logistic_regression",
+                        }
+                    }
+                },
+            },
+            503: ERROR_RESPONSES[503],
+        },
     )
     async def ready() -> dict[str, Any]:
         service = _service(app)

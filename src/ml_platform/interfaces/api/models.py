@@ -6,6 +6,19 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 
+class HealthResponse(BaseModel):
+    status: str = Field(description="Process liveness status.")
+
+
+class ReadinessResponse(BaseModel):
+    status: str = Field(description="Artifact readiness status.")
+    run_id: str = Field(description="Loaded training run identifier.")
+    artifact_version: str = Field(description="Loaded immutable artifact version.")
+    model_type: str | None = Field(description="Artifact model type.")
+    task: str | None = Field(description="Machine learning task.")
+    algorithm: str | None = Field(description="Configured estimator algorithm.")
+
+
 class BatchPredictionRequest(BaseModel):
     instances: list[dict[str, Any]] = Field(
         min_length=1,

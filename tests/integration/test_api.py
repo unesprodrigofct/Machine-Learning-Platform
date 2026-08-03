@@ -63,6 +63,8 @@ async def _exercise_successful_api(app) -> None:
         assert "executed_at" in batch.json()
         openapi = await client.get("/openapi.json")
         assert openapi.status_code == 200
+        assert openapi.json()["paths"]["/health"]["get"]["responses"]["200"]["content"]["application/json"]["example"] == {"status": "ok"}
+        assert openapi.json()["paths"]["/ready"]["get"]["responses"]["200"]["content"]["application/json"]["example"]["status"] == "ready"
         assert openapi.json()["paths"]["/predict"]["post"]["responses"]["200"]["content"]["application/json"]["example"]["run_id"]
         assert openapi.json()["paths"]["/predict"]["post"]["responses"]["400"]["content"]["application/json"]["example"]["error"]["code"] == "invalid_request"
 
