@@ -106,10 +106,16 @@ curl -X POST http://127.0.0.1:8000/predict \
   -d '{"distance_km":8.5,"prep_minutes":28,"weather":"rain","order_hour":19}'
 ```
 
-Open the interactive API documentation at
-[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs). The Swagger UI
-contains ready-to-run examples for single and batch predictions, including
-success and structured error responses.
+### Swagger UI
+
+Swagger is the primary interface for exploring and demonstrating the
+inference capability:
+
+[Open Swagger UI](http://127.0.0.1:8000/docs)
+
+After starting inference, open the link, select **Try it out**, and execute
+`/health`, `/ready`, `/predict`, or `/predict/batch`. The UI includes ready-to-run
+request examples and documents the success and structured error responses.
 
 ## Training configuration
 
@@ -251,7 +257,7 @@ docker compose -f docker/docker-compose.yml up inference
 
 The service exposes:
 
-- Swagger UI: http://localhost:8000/docs
+- **Swagger UI: http://127.0.0.1:8000/docs**
 - OpenAPI schema: http://localhost:8000/openapi.json
 - Liveness: http://localhost:8000/health
 - Readiness: http://localhost:8000/ready
