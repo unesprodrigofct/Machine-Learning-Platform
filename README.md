@@ -113,24 +113,6 @@ The orchestration code does not contain source-specific or algorithm-specific br
 
 ### Run training with Docker Compose
 
-Prerequisites:
-
-- Docker;
-- Docker Compose;
-- Python 3.11+ only for generating the sample dataset.
-
-Build the runtime image:
-
-```bash
-docker compose -f docker/docker-compose.yml build
-```
-
-Generate the deterministic example dataset:
-
-```bash
-python3 scripts/generate_sample_data.py
-```
-
 Run the one-shot training service:
 
 ```bash
@@ -143,6 +125,54 @@ The command creates a versioned artifact under:
 ```text
 artifacts/<run_id>/
 ```
+
+### Configure another training run
+
+Create a new YAML file under `configs/training/` so each run remains
+reproducible. The main fields to review are:
+
+```yaml
+data_source:
+  type: csv
+  path: data/sample/delivery_classification.csv
+target_column: late
+task: classification
+model:
+  algorithm: logistic_regression
+  parameters: {}
+```
+
+The same configuration also defines validation, preprocessing, metrics, and
+the artifact root. Keep the preprocessing section in the training YAML; the
+fitted preprocessing steps are saved inside the inference pipeline and are
+applied automatically by the API.
+
+For example, to create a separate run with another estimator:
+
+```bash
+cp configs/training/classification.yaml configs/training/gbm.yaml
+# edit configs/training/gbm.yaml
+docker compose -f docker/docker-compose.yml run --rm training \
+  --config /app/configs/training/gbm.yaml
+```
+
+The built-in estimator names include `logistic_regression`,
+`random_forest_classifier`, `linear_regression`, `random_forest_regressor`,
+`kmeans`, `isolation_forest`, `xgboost_classifier`, and
+`xgboost_regressor`. For a GBM-style classification run, use
+`xgboost_classifier` and install the optional dependency locally:
+
+```bash
+.venv/bin/pip install -e ".[api,dev,xgboost]"
+.venv/bin/ml-platform --config configs/training/gbm.yaml
+```
+
+The default Compose image installs the API dependencies only. To run
+XGBoost inside Docker, build an image variant with the `xgboost` extra enabled
+in `docker/Dockerfile` before starting the training service.
+
+The generated `metadata.json` records the selected algorithm and the
+artifact's `config.yaml` records the complete effective configuration.
 
 ### Run training locally with Python
 
