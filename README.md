@@ -20,6 +20,20 @@ deployment.
 The image is optimized for quick review; the editable
 [draw.io source](docs/aws-architecture.drawio) is available for deeper inspection.
 
+## Architecture
+
+The platform is split into two capabilities connected by a versioned artifact:
+
+```text
+Training Capability  ->  Versioned Artifact  ->  Inference Capability
+```
+
+Training fits the preprocessing and estimator together. Inference loads that
+fitted pipeline and applies it to raw request features, preserving the
+training-serving contract. Docker Compose provides the local runtime, while
+the AWS diagram proposes cloud equivalents for training, artifact storage,
+model serving, and API exposure.
+
 ## Repository structure
 
 ```text
@@ -97,7 +111,7 @@ Open the interactive API documentation at
 contains ready-to-run examples for single and batch predictions, including
 success and structured error responses.
 
-## Training Capability
+## Training configuration
 
 The training capability is configuration-first. A YAML file defines:
 
@@ -261,29 +275,6 @@ curl -X POST http://localhost:8000/predict/batch \
 ```
 
 The API validates the request contract and passes raw feature values to the fitted pipeline. Imputation, encoding, scaling, and model inference are performed by `inference_pipeline.joblib`.
-
-## How to use the platform
-
-The recommended workflow is:
-
-1. Generate or provide the input data.
-2. Run the training capability with a versioned YAML configuration.
-3. Select the generated artifact directory by its `run_id`.
-4. Start the inference service with `MODEL_ARTIFACT_PATH`.
-5. Check readiness and send raw features through the REST API.
-
-For the complete command sequence, use the local end-to-end walkthrough
-available in the developer workspace. It is intentionally private and ignored
-by Git.
-
-The interactive API documentation is available after starting inference:
-
-- Swagger UI: http://localhost:8000/docs
-- OpenAPI JSON: http://localhost:8000/openapi.json
-
-Swagger documents the feature request example, success responses, and the
-structured error responses returned for invalid requests, prediction failures,
-and unavailable artifacts.
 
 ## Local infrastructure
 
