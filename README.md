@@ -158,7 +158,7 @@ Single prediction:
 \`\`\`bash
 curl -X POST http://localhost:8000/predict \
   -H 'Content-Type: application/json' \
-  -d '{"distance_km": 8.5, "weather": "rain"}'
+  -d '{"distance_km":8.5,"prep_minutes":28,"weather":"rain","order_hour":19}'
 \`\`\`
 
 Batch prediction:
@@ -166,7 +166,7 @@ Batch prediction:
 \`\`\`bash
 curl -X POST http://localhost:8000/predict/batch \
   -H 'Content-Type: application/json' \
-  -d '{"instances":[{"distance_km":8.5,"weather":"rain"},{"distance_km":2.0,"weather":"clear"}]}'
+  -d '{"instances":[{"distance_km":8.5,"prep_minutes":28,"weather":"rain","order_hour":19},{"distance_km":2.0,"prep_minutes":12,"weather":"clear","order_hour":11}]}'
 \`\`\`
 
 The API validates the request contract and passes raw feature values to the fitted pipeline. Imputation, encoding, scaling, and model inference are performed by \`inference_pipeline.joblib\`.
