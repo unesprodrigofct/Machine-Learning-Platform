@@ -13,6 +13,8 @@ Requires-Dist: typer<1.0,>=0.12
 Provides-Extra: database
 Requires-Dist: sqlalchemy<3.0,>=2.0; extra == "database"
 Requires-Dist: psycopg[binary]<4.0,>=3.2; extra == "database"
+Provides-Extra: xgboost
+Requires-Dist: xgboost<4.0,>=2.1; extra == "xgboost"
 Provides-Extra: api
 Requires-Dist: fastapi<1.0,>=0.115; extra == "api"
 Requires-Dist: uvicorn[standard]<1.0,>=0.30; extra == "api"
@@ -42,7 +44,7 @@ The repository scaffold and the training capability specification are in place. 
 | Path | Purpose |
 | --- | --- |
 | `src/ml_platform/` | Platform source code |
-| `configs/examples/` | Versioned example training configurations |
+| `configs/training/` | Versioned training configurations |
 | `sql/` | Read-only source extraction and enrichment queries |
 | `data/sample/` | Small non-sensitive example data |
 | `artifacts/` | Local generated model artifacts (not versioned) |
@@ -52,12 +54,34 @@ The repository scaffold and the training capability specification are in place. 
 ## Documentation
 
 - [Training capability specification](.vscode/training-platform-spec.md)
+- [Inference REST API specification](.vscode/inference-api-spec.md)
 - [Architecture overview](docs/architecture.md)
 
 ## Planned execution interface
 
+Create a virtual environment and install the project:
+
 ```bash
-ml-platform train --config configs/examples/classification.yaml
+python3 -m venv .venv
+.venv/bin/pip install -e ".[dev]"
 ```
 
-The command will be implemented in the next milestone.
+Generate the deterministic example dataset and train the example model:
+
+```bash
+python3 scripts/generate_sample_data.py
+.venv/bin/ml-platform --config configs/training/classification.yaml
+```
+
+Each run writes a self-contained artifact directory under `artifacts/`.
+
+Evaluation metrics are selected from `evaluation.metrics` in the training
+configuration. When that field is omitted, the task-specific defaults from
+`configs/metrics/defaults.yaml` are used. For example, the included
+classification configuration uses all defaults defined for classification.
+
+Run the automated tests with:
+
+```bash
+.venv/bin/pytest
+```

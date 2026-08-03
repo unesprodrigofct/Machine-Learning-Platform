@@ -1,0 +1,14 @@
+.git
+.gitignore
+.venv
+__pycache__
+*.py[cod]
+.coverage
+.pytest_cache
+.ruff_cache
+artifacts/*
+data/*
+.env
+.vscode/case/*.pdf
+tests
+docs
