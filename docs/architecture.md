@@ -151,6 +151,8 @@ The public deployment diagram is available in
 [aws-architecture.drawio](aws-architecture.drawio). It intentionally uses
 generic service names so AWS icons can be added during presentation.
 
+![AWS deployment architecture](aws-architecture-image.png)
+
 ```text
 Code repository
       |

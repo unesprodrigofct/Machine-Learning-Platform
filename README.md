@@ -15,6 +15,11 @@ See the [architecture overview](docs/architecture.md) and the
 boundaries, artifact flow, local Docker Compose topology, and proposed AWS
 deployment.
 
+![AWS deployment architecture](docs/aws-architecture-image.png)
+
+The image is optimized for quick review; the editable
+[draw.io source](docs/aws-architecture.drawio) is available for deeper inspection.
+
 ## Repository structure
 
 ```text
@@ -29,6 +34,7 @@ deployment.
 │   └── docker-compose.yml       # Training and inference services
 ├── docs/
 │   ├── architecture.md         # Cloud and application architecture
+│   ├── aws-architecture-image.png # Presentation-ready architecture image
 │   └── aws-architecture.drawio  # Deployment diagram
 ├── src/ml_platform/
 │   ├── application/            # Training and inference use cases
