@@ -7,6 +7,9 @@
         <mxCell id="title" parent="1" style="text;html=1;fontSize=24;fontStyle=1;strokeColor=none;fillColor=none;" value="Machine Learning Platform — Local Implementation and Proposed AWS Architecture" vertex="1">
           <mxGeometry height="40" width="900" x="40" y="20" as="geometry" />
         </mxCell>
+        <mxCell id="scope" parent="1" style="text;html=1;fontSize=14;fontStyle=2;strokeColor=none;fillColor=none;" value="Left: implemented locally with Docker Compose&#xa;Right: proposed AWS deployment (not provisioned)" vertex="1">
+          <mxGeometry height="40" width="900" x="40" y="62" as="geometry" />
+        </mxCell>
         <mxCell id="local" parent="1" style="swimlane;html=1;rounded=1;startSize=30;fillColor=#F4F5F7;strokeColor=#97A0AF;fontStyle=1;" value="Implemented Local Runtime — Docker Compose" vertex="1">
           <mxGeometry height="560" width="250" x="40" y="110" as="geometry" />
         </mxCell>

@@ -3,6 +3,14 @@
 This page separates the runnable architecture delivered by this repository
 from the future cloud deployment proposal.
 
+| Area | Status |
+| --- | --- |
+| Docker Compose training and inference runtime | Implemented locally |
+| AWS training, storage, registry, and serving services | Proposed only |
+
+The repository can be executed locally today. The AWS design describes how the
+same training and inference contracts could be deployed in the cloud later.
+
 The Machine Learning Platform is organized around two independent capabilities:
 
 ```text
