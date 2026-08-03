@@ -47,6 +47,7 @@ async def _exercise_successful_api(app) -> None:
         assert prediction.json()["run_id"] == readiness.json()["run_id"]
         assert "prediction" in prediction.json()
         assert "probabilities" in prediction.json()
+        assert "executed_at" in prediction.json()
 
         batch = await client.post(
             "/predict/batch",
@@ -57,6 +58,7 @@ async def _exercise_successful_api(app) -> None:
         )
         assert batch.status_code == 200
         assert len(batch.json()["predictions"]) == 2
+        assert "executed_at" in batch.json()
         assert (await client.get("/openapi.json")).status_code == 200
 
 

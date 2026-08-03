@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import os
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import FastAPI, Request, status
+from fastapi import Body, FastAPI, Request, status
 from fastapi.responses import JSONResponse
 
 from ml_platform.adapters.artifact_stores.artifact_loader import ArtifactLoader
@@ -29,7 +30,18 @@ def create_app(artifact_path: str | Path | None = None) -> FastAPI:
     app = FastAPI(
         title="Machine Learning Platform Inference API",
         version="0.1.0",
-        description="Serve predictions from a versioned fitted inference pipeline.",
+        description=(
+            "Serve predictions from a versioned fitted inference pipeline.\n\n"
+            "The API preserves the training-serving contract: request payloads contain "
+            "raw feature values, while imputation, encoding, scaling, and model inference "
+            "are executed by the fitted pipeline stored in the selected artifact.\n\n"
+            "Select the artifact explicitly with the MODEL_ARTIFACT_PATH environment variable. "
+            "The service never trains or silently selects a latest model at request time."
+        ),
+        openapi_tags=[
+            {"name": "Service", "description": "Health and artifact readiness endpoints."},
+            {"name": "Inference", "description": "Single and batch predictions using the fitted artifact pipeline."},
+        ],
     )
     configured_path = artifact_path or os.getenv("MODEL_ARTIFACT_PATH")
     app.state.inference_service = None
@@ -59,11 +71,21 @@ def create_app(artifact_path: str | Path | None = None) -> FastAPI:
             content={"error": {"code": code, "message": error.message, "details": error.details}},
         )
 
-    @app.get("/health")
+    @app.get(
+        "/health",
+        tags=["Service"],
+        summary="Check whether the process is alive",
+        description="Liveness probe. This endpoint does not verify that a model artifact is loaded.",
+    )
     async def health() -> dict[str, str]:
         return {"status": "ok"}
 
-    @app.get("/ready")
+    @app.get(
+        "/ready",
+        tags=["Service"],
+        summary="Check whether the selected artifact is ready",
+        description="Readiness probe that verifies the configured artifact can serve predictions.",
+    )
     async def ready() -> dict[str, Any]:
         service = _service(app)
         metadata = service.context.metadata
@@ -76,16 +98,57 @@ def create_app(artifact_path: str | Path | None = None) -> FastAPI:
             "algorithm": metadata.get("algorithm"),
         }
 
-    @app.post("/predict", response_model=PredictionResponse, responses={400: {"model": ErrorResponse}, 422: {"model": ErrorResponse}, 503: {"model": ErrorResponse}})
-    async def predict(features: dict[str, Any]) -> dict[str, Any]:
+    @app.post(
+        "/predict",
+        response_model=PredictionResponse,
+        tags=["Inference"],
+        summary="Predict one instance",
+        description=(
+            "Validate one raw feature record against the selected artifact schema and execute "
+            "the fitted inference pipeline. Do not apply training preprocessing in the client."
+        ),
+        responses={400: {"model": ErrorResponse}, 422: {"model": ErrorResponse}, 503: {"model": ErrorResponse}},
+    )
+    async def predict(
+        features: Annotated[
+            dict[str, Any],
+            Body(
+                openapi_examples={
+                    "classification_example": {
+                        "summary": "Classification features",
+                        "value": {
+                            "distance_km": 8.5,
+                            "prep_minutes": 28,
+                            "weather": "rain",
+                            "order_hour": 19,
+                        },
+                    }
+                }
+            ),
+        ]
+    ) -> dict[str, Any]:
         service = _service(app)
         result = service.predict_one(features)
-        return {**result, "run_id": service.context.run_id}
+        return {**result, "run_id": service.context.run_id, "executed_at": datetime.now(UTC)}
 
-    @app.post("/predict/batch", response_model=BatchPredictionResponse, responses={400: {"model": ErrorResponse}, 422: {"model": ErrorResponse}, 503: {"model": ErrorResponse}})
+    @app.post(
+        "/predict/batch",
+        response_model=BatchPredictionResponse,
+        tags=["Inference"],
+        summary="Predict a batch of instances",
+        description=(
+            "Validate and predict multiple raw feature records. The response preserves input order "
+            "and includes the artifact run identifier and UTC execution timestamp."
+        ),
+        responses={400: {"model": ErrorResponse}, 422: {"model": ErrorResponse}, 503: {"model": ErrorResponse}},
+    )
     async def predict_batch(request: BatchPredictionRequest) -> dict[str, Any]:
         service = _service(app)
-        return {"predictions": service.predict_batch(request.instances), "run_id": service.context.run_id}
+        return {
+            "predictions": service.predict_batch(request.instances),
+            "run_id": service.context.run_id,
+            "executed_at": datetime.now(UTC),
+        }
 
     return app
 
