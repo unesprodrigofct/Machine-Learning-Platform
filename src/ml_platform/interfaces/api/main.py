@@ -271,7 +271,34 @@ def create_app(artifact_path: str | Path | None = None) -> FastAPI:
         ),
         responses=BATCH_PREDICTION_RESPONSES,
     )
-    async def predict_batch(request: BatchPredictionRequest) -> dict[str, Any]:
+    async def predict_batch(
+        request: Annotated[
+            BatchPredictionRequest,
+            Body(
+                openapi_examples={
+                    "classification_batch": {
+                        "summary": "Classification batch",
+                        "value": {
+                            "instances": [
+                                {
+                                    "distance_km": 8.5,
+                                    "prep_minutes": 28,
+                                    "weather": "rain",
+                                    "order_hour": 19,
+                                },
+                                {
+                                    "distance_km": 2.1,
+                                    "prep_minutes": 15,
+                                    "weather": "clear",
+                                    "order_hour": 12,
+                                },
+                            ]
+                        },
+                    }
+                }
+            ),
+        ]
+    ) -> dict[str, Any]:
         service = _service(app)
         return {
             "predictions": service.predict_batch(request.instances),

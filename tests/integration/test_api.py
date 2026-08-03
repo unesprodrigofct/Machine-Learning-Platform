@@ -67,6 +67,8 @@ async def _exercise_successful_api(app) -> None:
         assert openapi.json()["paths"]["/ready"]["get"]["responses"]["200"]["content"]["application/json"]["example"]["status"] == "ready"
         assert openapi.json()["paths"]["/predict"]["post"]["responses"]["200"]["content"]["application/json"]["example"]["run_id"]
         assert openapi.json()["paths"]["/predict"]["post"]["responses"]["400"]["content"]["application/json"]["example"]["error"]["code"] == "invalid_request"
+        batch_examples = openapi.json()["paths"]["/predict/batch"]["post"]["requestBody"]["content"]["application/json"]["examples"]
+        assert batch_examples["classification_batch"]["value"]["instances"][0]["distance_km"] == 8.5
 
 
 def test_api_rejects_invalid_feature_contract(tmp_path: Path) -> None:
