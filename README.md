@@ -257,3 +257,7 @@ API Gateway / Application Load Balancer
 ```
 
 The application depends on artifact and inference contracts, not on Docker or a specific AWS service. This allows the local runtime to evolve into a managed cloud deployment.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
