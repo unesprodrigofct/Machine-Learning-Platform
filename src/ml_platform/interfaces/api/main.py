@@ -25,6 +25,54 @@ from ml_platform.interfaces.api.models import (
     PredictionResponse,
 )
 
+ERROR_RESPONSES = {
+    400: {
+        "model": ErrorResponse,
+        "description": "The request does not satisfy the selected artifact feature contract.",
+        "content": {
+            "application/json": {
+                "example": {
+                    "error": {
+                        "code": "invalid_request",
+                        "message": "Required feature is missing.",
+                        "details": {"index": 0, "fields": ["prep_minutes"]},
+                    }
+                }
+            }
+        },
+    },
+    422: {
+        "model": ErrorResponse,
+        "description": "The fitted model could not produce a prediction for the validated input.",
+        "content": {
+            "application/json": {
+                "example": {
+                    "error": {
+                        "code": "prediction_error",
+                        "message": "Prediction could not be completed.",
+                        "details": {},
+                    }
+                }
+            }
+        },
+    },
+    503: {
+        "model": ErrorResponse,
+        "description": "The selected model artifact is unavailable or could not be loaded.",
+        "content": {
+            "application/json": {
+                "example": {
+                    "error": {
+                        "code": "model_not_ready",
+                        "message": "The model artifact is not available.",
+                        "details": {},
+                    }
+                }
+            }
+        },
+    },
+}
+
 
 def create_app(artifact_path: str | Path | None = None) -> FastAPI:
     app = FastAPI(
@@ -107,7 +155,7 @@ def create_app(artifact_path: str | Path | None = None) -> FastAPI:
             "Validate one raw feature record against the selected artifact schema and execute "
             "the fitted inference pipeline. Do not apply training preprocessing in the client."
         ),
-        responses={400: {"model": ErrorResponse}, 422: {"model": ErrorResponse}, 503: {"model": ErrorResponse}},
+        responses=ERROR_RESPONSES,
     )
     async def predict(
         features: Annotated[
@@ -140,7 +188,7 @@ def create_app(artifact_path: str | Path | None = None) -> FastAPI:
             "Validate and predict multiple raw feature records. The response preserves input order "
             "and includes the artifact run identifier and UTC execution timestamp."
         ),
-        responses={400: {"model": ErrorResponse}, 422: {"model": ErrorResponse}, 503: {"model": ErrorResponse}},
+        responses=ERROR_RESPONSES,
     )
     async def predict_batch(request: BatchPredictionRequest) -> dict[str, Any]:
         service = _service(app)

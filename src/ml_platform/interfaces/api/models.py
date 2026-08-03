@@ -33,9 +33,12 @@ class BatchPredictionResponse(BaseModel):
 
 
 class ErrorBody(BaseModel):
-    code: str
-    message: str
-    details: dict[str, Any] = Field(default_factory=dict)
+    code: str = Field(description="Stable machine-readable error code.")
+    message: str = Field(description="Human-readable explanation of the failure.")
+    details: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Structured context, such as missing fields or the expected data type.",
+    )
 
 
 class ErrorResponse(BaseModel):
