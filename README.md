@@ -12,14 +12,19 @@ The central architectural principle is training-serving consistency: the fitted 
 
 ## Architecture
 
-The detailed capability boundaries, artifact contract, local topology, and
-cloud proposal are documented in the
-[architecture guide](docs/architecture.md).
+The implemented runtime is the local Docker Compose architecture. The
+capability boundaries, artifact contract, and local topology are documented in
+the [architecture guide](docs/architecture.md).
 
-![AWS deployment architecture](docs/aws-architecture-image.png)
+> **Implemented locally:** Docker Compose training and inference services.
+>
+> **Proposed only:** AWS services for a future cloud deployment. No AWS
+> resources are provisioned by this repository.
 
-The image is optimized for quick review; the editable
+The image below shows both contexts. The editable
 [draw.io source](docs/aws-architecture.drawio) is also available.
+
+![Implemented local runtime and proposed AWS deployment](docs/aws-architecture-image.png)
 
 ## Repository structure
 
@@ -34,8 +39,8 @@ The image is optimized for quick review; the editable
 │   ├── Dockerfile               # Runtime image
 │   └── docker-compose.yml       # Training and inference services
 ├── docs/
-│   ├── architecture.md         # Cloud and application architecture
-│   ├── aws-architecture-image.png # Presentation-ready architecture image
+│   ├── architecture.md         # Local architecture and AWS proposal
+│   ├── aws-architecture-image.png # Local runtime and AWS proposal image
 │   └── aws-architecture.drawio  # Deployment diagram
 ├── src/ml_platform/
 │   ├── application/            # Training and inference use cases
