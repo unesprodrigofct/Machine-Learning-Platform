@@ -47,6 +47,56 @@ The image is optimized for quick review; the editable
 └── scripts/                    # Reproducible helper scripts
 ```
 
+## Quick start: end-to-end execution
+
+The complete local flow can be executed with Docker Compose. It trains a
+versioned artifact, selects that exact artifact, starts the inference API, and
+exposes the interactive Swagger documentation.
+
+Prerequisites:
+
+- Docker Engine;
+- Docker Compose v2;
+- Python 3.11+ to generate the sample dataset.
+
+From the repository root:
+
+```bash
+python3 scripts/generate_sample_data.py
+docker compose -f docker/docker-compose.yml build
+docker compose -f docker/docker-compose.yml run --rm training
+```
+
+Find the run created by training and select it explicitly:
+
+```bash
+RUN_ID=$(find artifacts -mindepth 1 -maxdepth 1 -type d -printf '%T@ %f\n' \
+  | sort -nr | head -n1 | cut -d' ' -f2-)
+export MODEL_ARTIFACT_PATH="/app/artifacts/$RUN_ID"
+echo "Using artifact: $RUN_ID"
+```
+
+Start inference:
+
+```bash
+docker compose -f docker/docker-compose.yml up -d inference
+```
+
+Verify the service and send a prediction:
+
+```bash
+curl http://127.0.0.1:8000/health
+curl http://127.0.0.1:8000/ready
+curl -X POST http://127.0.0.1:8000/predict \
+  -H 'Content-Type: application/json' \
+  -d '{"distance_km":8.5,"prep_minutes":28,"weather":"rain","order_hour":19}'
+```
+
+Open the interactive API documentation at
+[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs). The Swagger UI
+contains ready-to-run examples for single and batch predictions, including
+success and structured error responses.
+
 ## Training Capability
 
 The training capability is configuration-first. A YAML file defines:
