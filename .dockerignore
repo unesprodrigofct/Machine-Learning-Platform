@@ -10,5 +10,6 @@ artifacts/*
 data/*
 .env
 .vscode
+.codex
 tests
 docs
