@@ -10,29 +10,16 @@ The project is organized around three capabilities:
 
 The central architectural principle is training-serving consistency: the fitted preprocessing pipeline and estimator are saved together and reused by the inference API.
 
-See the [architecture overview](docs/architecture.md) and the
-[deployment diagram](docs/aws-architecture.drawio) for the capability
-boundaries, artifact flow, local Docker Compose topology, and proposed AWS
-deployment.
+## Architecture
+
+The detailed capability boundaries, artifact contract, local topology, and
+cloud proposal are documented in the
+[architecture guide](docs/architecture.md).
 
 ![AWS deployment architecture](docs/aws-architecture-image.png)
 
 The image is optimized for quick review; the editable
-[draw.io source](docs/aws-architecture.drawio) is available for deeper inspection.
-
-## Architecture
-
-The platform is split into two capabilities connected by a versioned artifact:
-
-```text
-Training Capability  ->  Versioned Artifact  ->  Inference Capability
-```
-
-Training fits the preprocessing and estimator together. Inference loads that
-fitted pipeline and applies it to raw request features, preserving the
-training-serving contract. Docker Compose provides the local runtime, while
-the AWS diagram proposes cloud equivalents for training, artifact storage,
-model serving, and API exposure.
+[draw.io source](docs/aws-architecture.drawio) is also available.
 
 ## Repository structure
 
@@ -317,29 +304,6 @@ The Docker image can be built with:
 ```bash
 docker build -f docker/Dockerfile -t ml-platform:local .
 ```
-
-## Documentation
-
-- [Application and cloud architecture](docs/architecture.md)
-- [AWS deployment diagram](docs/aws-architecture.drawio)
-
-## Cloud architecture
-
-The local Docker Compose setup maps to the proposed AWS design:
-
-```text
-S3 versioned artifacts
-        |
-SageMaker Training or ECS training task
-        |
-S3 + model registry
-        |
-ECS/Fargate service or SageMaker Endpoint
-        |
-API Gateway / Application Load Balancer
-```
-
-The application depends on artifact and inference contracts, not on Docker or a specific AWS service. This allows the local runtime to evolve into a managed cloud deployment.
 
 ## License
 
