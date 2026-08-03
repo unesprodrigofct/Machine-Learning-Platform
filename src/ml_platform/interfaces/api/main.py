@@ -114,6 +114,7 @@ BATCH_PREDICTION_RESPONSES = {
 
 
 def create_app(artifact_path: str | Path | None = None) -> FastAPI:
+    swagger_server_url = os.getenv("SWAGGER_SERVER_URL", "http://127.0.0.1:8000")
     app = FastAPI(
         title="Machine Learning Platform Inference API",
         version="0.1.0",
@@ -125,7 +126,7 @@ def create_app(artifact_path: str | Path | None = None) -> FastAPI:
             "Select the artifact explicitly with the MODEL_ARTIFACT_PATH environment variable. "
             "The service never trains or silently selects a latest model at request time."
         ),
-        servers=[{"url": "/", "description": "Current inference service"}],
+        servers=[{"url": swagger_server_url, "description": "Current inference service"}],
         openapi_tags=[
             {"name": "Service", "description": "Health and artifact readiness endpoints."},
             {"name": "Inference", "description": "Single and batch predictions using the fitted artifact pipeline."},
