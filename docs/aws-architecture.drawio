@@ -4,10 +4,10 @@
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="title" parent="1" style="text;html=1;fontSize=24;fontStyle=1;strokeColor=none;fillColor=none;" value="Machine Learning Platform — AWS Deployment Architecture" vertex="1">
+        <mxCell id="title" parent="1" style="text;html=1;fontSize=24;fontStyle=1;strokeColor=none;fillColor=none;" value="Machine Learning Platform — Local Implementation and Proposed AWS Architecture" vertex="1">
           <mxGeometry height="40" width="900" x="40" y="20" as="geometry" />
         </mxCell>
-        <mxCell id="local" parent="1" style="swimlane;html=1;rounded=1;startSize=30;fillColor=#F4F5F7;strokeColor=#97A0AF;fontStyle=1;" value="Local Development" vertex="1">
+        <mxCell id="local" parent="1" style="swimlane;html=1;rounded=1;startSize=30;fillColor=#F4F5F7;strokeColor=#97A0AF;fontStyle=1;" value="Implemented Local Runtime — Docker Compose" vertex="1">
           <mxGeometry height="560" width="250" x="40" y="110" as="geometry" />
         </mxCell>
         <mxCell id="local_dev" parent="local" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5E6C84;" value="Developer&#xa;README + config" vertex="1">
@@ -31,7 +31,7 @@
         <mxCell id="l3" edge="1" parent="1" source="local_artifact" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;html=1;strokeColor=#5E6C84;" target="local_api">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="aws" parent="1" style="swimlane;html=1;rounded=1;startSize=30;fillColor=#F7F8F9;strokeColor=#0052CC;fontStyle=1;" value="AWS Cloud" vertex="1">
+        <mxCell id="aws" parent="1" style="swimlane;html=1;rounded=1;startSize=30;fillColor=#F7F8F9;strokeColor=#0052CC;fontStyle=1;" value="Proposed AWS Cloud — Not Provisioned" vertex="1">
           <mxGeometry height="560" width="1160" x="340" y="100" as="geometry" />
         </mxCell>
         <mxCell id="data" parent="aws" style="swimlane;html=1;rounded=1;startSize=28;fillColor=#FFF7E6;strokeColor=#FFAB00;fontStyle=1;" value="Data and Artifacts" vertex="1">

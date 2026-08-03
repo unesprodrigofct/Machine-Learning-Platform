@@ -1,5 +1,8 @@
 # Platform Architecture
 
+This page separates the runnable architecture delivered by this repository
+from the future cloud deployment proposal.
+
 The Machine Learning Platform is organized around two independent capabilities:
 
 ```text
@@ -84,9 +87,9 @@ HTTP validation and inference validation have separate responsibilities:
 - Inference validation checks feature names and values against `schema.json`.
 - Preprocessing semantics belong exclusively to the fitted pipeline.
 
-## Local deployment with Docker Compose
+## Implemented architecture: local Docker Compose
 
-The local environment contains two services:
+The implemented environment contains two services:
 
 ```text
                        shared repository volumes
@@ -145,9 +148,12 @@ http://localhost:8000/openapi.json
 The API documents successful responses and the structured error contract for
 invalid requests, prediction failures, and unavailable artifacts.
 
-## AWS deployment proposal
+## Proposed architecture: AWS deployment
 
-The public deployment diagram is available in
+The following section is a cloud design proposal. It is not provisioned by
+this repository; the runnable implementation is the Docker Compose flow above.
+
+The deployment diagram is available in
 [aws-architecture.drawio](aws-architecture.drawio). It intentionally uses
 generic service names so AWS icons can be added during presentation.
 
