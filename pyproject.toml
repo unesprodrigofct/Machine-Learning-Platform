@@ -33,6 +33,13 @@ where = ["src"]
 testpaths = ["tests"]
 addopts = "-q"
 
+[tool.coverage.run]
+source = ["src/ml_platform"]
+
+[tool.coverage.report]
+fail_under = 80
+skip_empty = true
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"
