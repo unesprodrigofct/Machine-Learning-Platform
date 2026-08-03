@@ -59,7 +59,10 @@ async def _exercise_successful_api(app) -> None:
         assert batch.status_code == 200
         assert len(batch.json()["predictions"]) == 2
         assert "executed_at" in batch.json()
-        assert (await client.get("/openapi.json")).status_code == 200
+        openapi = await client.get("/openapi.json")
+        assert openapi.status_code == 200
+        assert openapi.json()["paths"]["/predict"]["post"]["responses"]["200"]["content"]["application/json"]["example"]["run_id"]
+        assert openapi.json()["paths"]["/predict"]["post"]["responses"]["400"]["content"]["application/json"]["example"]["error"]["code"] == "invalid_request"
 
 
 def test_api_rejects_invalid_feature_contract(tmp_path: Path) -> None:
