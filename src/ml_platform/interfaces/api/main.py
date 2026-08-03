@@ -9,7 +9,8 @@ from typing import Annotated, Any
 
 from fastapi import Body, FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.responses import JSONResponse, Response
 
 from ml_platform.adapters.artifact_stores.artifact_loader import ArtifactLoader
 from ml_platform.application.inference import InferenceService
@@ -112,12 +113,41 @@ BATCH_PREDICTION_RESPONSES = {
     **ERROR_RESPONSES,
 }
 
+SWAGGER_CSS = """
+/* Make the result of Try it out visually prominent during demonstrations. */
+.swagger-ui .responses-wrapper {
+  margin-top: 24px;
+  border: 3px solid #2563eb;
+  border-radius: 8px;
+  background: #eff6ff;
+}
+.swagger-ui .responses-wrapper::before {
+  display: block;
+  padding: 12px 20px 0;
+  color: #1d4ed8;
+  content: "API RESPONSE";
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+.swagger-ui .response-col_status {
+  color: #166534;
+  font-size: 16px;
+  font-weight: 700;
+}
+.swagger-ui .response-col_description {
+  color: #172033;
+}
+"""
+
 
 def create_app(artifact_path: str | Path | None = None) -> FastAPI:
     swagger_server_url = os.getenv("SWAGGER_SERVER_URL", "http://127.0.0.1:8000")
     app = FastAPI(
         title="Machine Learning Platform Inference API",
         version="0.1.0",
+        docs_url=None,
+        redoc_url=None,
         description=(
             "Serve predictions from a versioned fitted inference pipeline.\n\n"
             "The API preserves the training-serving contract: request payloads contain "
@@ -134,9 +164,24 @@ def create_app(artifact_path: str | Path | None = None) -> FastAPI:
         swagger_ui_parameters={
             "tryItOutEnabled": True,
             "displayRequestDuration": True,
+            "docExpansion": "list",
+            "defaultModelExpandDepth": 1,
             "defaultModelsExpandDepth": 1,
         },
     )
+
+    @app.get("/swagger.css", include_in_schema=False)
+    async def swagger_css() -> Response:
+        return Response(content=SWAGGER_CSS, media_type="text/css")
+
+    @app.get("/docs", include_in_schema=False)
+    async def swagger_ui() -> Response:
+        return get_swagger_ui_html(
+            openapi_url=app.openapi_url,
+            title=f"{app.title} - Swagger UI",
+            swagger_css_url="/swagger.css",
+            swagger_ui_parameters=app.swagger_ui_parameters,
+        )
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["http://localhost:8000", "http://127.0.0.1:8000"],
