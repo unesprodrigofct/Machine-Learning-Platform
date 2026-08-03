@@ -9,6 +9,6 @@ __pycache__
 artifacts/*
 data/*
 .env
-.vscode/case/*.pdf
+.vscode
 tests
 docs
