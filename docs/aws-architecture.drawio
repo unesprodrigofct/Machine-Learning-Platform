@@ -16,7 +16,7 @@
         <mxCell id="local_train" parent="local" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3FCEF;strokeColor=#36B37E;" value="Docker Compose&#xa;Training service" vertex="1">
           <mxGeometry height="60" width="180" x="35" y="180" as="geometry" />
         </mxCell>
-        <mxCell id="local_artifact" parent="local" style="shape=folder;whiteSpace=wrap;html=1;fillColor=#DEEBFF;strokeColor=#4C9AFF;" value="Host artifacts/&lt;run_id&gt;&#xa;inference_pipeline.joblib" vertex="1">
+        <mxCell id="local_artifact" parent="local" style="shape=folder;whiteSpace=wrap;html=1;fillColor=#DEEBFF;strokeColor=#4C9AFF;tabWidth=175;tabHeight=0;" value="Host artifacts/&lt;run_id&gt;&#xa;inference_pipeline.joblib" vertex="1">
           <mxGeometry height="75" width="180" x="35" y="300" as="geometry" />
         </mxCell>
         <mxCell id="local_api" parent="local" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE7F6;strokeColor=#6554C0;" value="Docker Compose&#xa;Inference service" vertex="1">
@@ -38,7 +38,7 @@
           <mxGeometry height="470" width="270" x="30" y="50" as="geometry" />
         </mxCell>
         <mxCell id="s3_data" parent="data" style="shape=cylinder;whiteSpace=wrap;html=1;fillColor=#FFF0B3;strokeColor=#FFAB00;" value="Amazon S3&#xa;Datasets" vertex="1">
-          <mxGeometry height="70" width="180" x="45" y="50" as="geometry" />
+          <mxGeometry height="70" width="180" x="45" y="60" as="geometry" />
         </mxCell>
         <mxCell id="rds" parent="data" style="shape=cylinder;whiteSpace=wrap;html=1;fillColor=#FFF0B3;strokeColor=#FFAB00;" value="Amazon RDS&#xa;Read-only source" vertex="1">
           <mxGeometry height="70" width="180" x="45" y="155" as="geometry" />
@@ -67,18 +67,6 @@
         <mxCell id="gate" parent="training" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3FCEF;strokeColor=#36B37E;" value="Validation and&#xa;promotion gate" vertex="1">
           <mxGeometry height="60" width="190" x="55" y="330" as="geometry" />
         </mxCell>
-        <mxCell id="e1" edge="1" parent="training" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;html=1;strokeColor=#FFAB00;" value="read">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="-60" y="135" as="sourcePoint" />
-            <mxPoint x="155" y="225" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="e10" edge="1" parent="training" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;html=1;strokeColor=#4C9AFF;" value="read-only version">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="455" y="360" as="sourcePoint" />
-            <mxPoint x="-65" y="295" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
         <mxCell id="serving" parent="aws" style="swimlane;html=1;rounded=1;startSize=28;fillColor=#EDE7F6;strokeColor=#6554C0;fontStyle=1;" value="Inference Layer" vertex="1">
           <mxGeometry height="470" width="470" x="660" y="45" as="geometry" />
         </mxCell>
@@ -91,8 +79,23 @@
         <mxCell id="ecs" parent="serving" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE7F6;strokeColor=#6554C0;" value="ECS Fargate /&#xa;SageMaker Endpoint&#xa;Large or low-latency models" vertex="1">
           <mxGeometry height="75" width="190" x="250" y="190" as="geometry" />
         </mxCell>
-        <mxCell id="cache" parent="serving" style="shape=folder;whiteSpace=wrap;html=1;fillColor=#DEEBFF;strokeColor=#4C9AFF;" value="Warm local model cache&#xa;loaded from S3" vertex="1">
+        <mxCell id="cache" parent="serving" style="shape=folder;whiteSpace=wrap;html=1;fillColor=#DEEBFF;strokeColor=#4C9AFF;tabWidth=215;tabHeight=60;" value="Warm local model cache&lt;br&gt;loaded from S3" vertex="1">
           <mxGeometry height="60" width="220" x="125" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="serving" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;html=1;strokeColor=#4C9AFF;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="s3_models" value="">
+          <mxGeometry relative="1" x="0.0068" y="-55" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="125.06" y="312.47" />
+            </Array>
+            <mxPoint x="125" y="355" as="sourcePoint" />
+            <mxPoint x="-395" y="290" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zuHi2PW2IDjJE1Kv7WFg-3" connectable="0" parent="e10" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Read-only version" vertex="1">
+          <mxGeometry relative="1" x="0.0542" y="1" as="geometry">
+            <mxPoint x="1" as="offset" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="ops" parent="aws" style="swimlane;html=1;rounded=1;startSize=28;fillColor=#F4F5F7;strokeColor=#97A0AF;fontStyle=1;" value="Security, Delivery and Observability" vertex="1">
           <mxGeometry height="1" width="1100" x="20" y="530" as="geometry" />
@@ -108,6 +111,16 @@
         </mxCell>
         <mxCell id="cw" parent="aws" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F4F5F7;strokeColor=#97A0AF;" value="CloudWatch&#xa;Logs, metrics, alarms" vertex="1">
           <mxGeometry height="60" width="190" x="790" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="aws" source="s3_data" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;html=1;strokeColor=#FFAB00;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="job" value="read">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="255.06" y="190.06" />
+              <mxPoint x="470" y="190.06" />
+            </Array>
+            <mxPoint x="190" y="190" as="sourcePoint" />
+            <mxPoint x="428.8599999999997" y="308.4499999999998" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="e2" edge="1" parent="1" source="rds" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;html=1;strokeColor=#FFAB00;" target="job" value="read-only SQL">
           <mxGeometry relative="1" as="geometry" />
@@ -131,7 +144,12 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="e11" edge="1" parent="1" source="iam" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;dashed=1;html=1;strokeColor=#97A0AF;" target="job" value="access control">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="715.06" y="560.06" />
+              <mxPoint x="810" y="560.06" />
+            </Array>
+          </mxGeometry>
         </mxCell>
         <mxCell id="e12" edge="1" parent="1" source="secrets" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;dashed=1;html=1;strokeColor=#97A0AF;" target="job" value="secrets">
           <mxGeometry relative="1" as="geometry">
@@ -142,7 +160,13 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="e13" edge="1" parent="1" source="job" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;dashed=1;html=1;strokeColor=#97A0AF;" target="cw" value="logs / metrics">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry relative="1" x="0.2171" y="5" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1020" y="362.53" />
+              <mxPoint x="1020" y="670.06" />
+            </Array>
+          </mxGeometry>
         </mxCell>
         <mxCell id="e14" edge="1" parent="1" source="lambda" style="edgeStyle=orthogonalEdgeStyle;endArrow=block;dashed=1;html=1;strokeColor=#97A0AF;" target="cw" value="logs / metrics">
           <mxGeometry relative="1" as="geometry" />
