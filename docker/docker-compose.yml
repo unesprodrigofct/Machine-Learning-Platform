@@ -14,7 +14,7 @@ services:
     entrypoint: ["uvicorn"]
     command: ["ml_platform.interfaces.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
     environment:
-      MODEL_ARTIFACT_PATH: ${MODEL_ARTIFACT_PATH:?Set MODEL_ARTIFACT_PATH to /app/artifacts/<run_id>}
+      MODEL_ARTIFACT_PATH: ${MODEL_ARTIFACT_PATH:-/app/artifacts/<run_id>}
     volumes:
       - ../artifacts:/app/artifacts:ro
     ports:

@@ -38,6 +38,8 @@ async def _exercise_successful_api(app) -> None:
     transport = httpx2.ASGITransport(app=app)
     async with httpx2.AsyncClient(transport=transport, base_url="http://test") as client:
         assert (await client.get("/health")).json() == {"status": "ok"}
+        cors = await client.get("/health", headers={"Origin": "http://localhost:8000"})
+        assert cors.headers["access-control-allow-origin"] == "http://localhost:8000"
         readiness = await client.get("/ready")
         assert readiness.status_code == 200
         assert readiness.json()["model_type"] == "sklearn_tabular"
@@ -59,7 +61,14 @@ async def _exercise_successful_api(app) -> None:
         assert batch.status_code == 200
         assert len(batch.json()["predictions"]) == 2
         assert "executed_at" in batch.json()
-        assert (await client.get("/openapi.json")).status_code == 200
+        openapi = await client.get("/openapi.json")
+        assert openapi.status_code == 200
+        assert openapi.json()["paths"]["/health"]["get"]["responses"]["200"]["content"]["application/json"]["example"] == {"status": "ok"}
+        assert openapi.json()["paths"]["/ready"]["get"]["responses"]["200"]["content"]["application/json"]["example"]["status"] == "ready"
+        assert openapi.json()["paths"]["/predict"]["post"]["responses"]["200"]["content"]["application/json"]["example"]["run_id"]
+        assert openapi.json()["paths"]["/predict"]["post"]["responses"]["400"]["content"]["application/json"]["example"]["error"]["code"] == "invalid_request"
+        batch_examples = openapi.json()["paths"]["/predict/batch"]["post"]["requestBody"]["content"]["application/json"]["examples"]
+        assert batch_examples["classification_batch"]["value"]["instances"][0]["distance_km"] == 8.5
 
 
 def test_api_rejects_invalid_feature_contract(tmp_path: Path) -> None:
